@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-# 2.12 Lab 4 object detection: a node for de-noising
-# Luke Roberto Oct 2017
+# 2.12 Lab 7 Optical Flow
+# Jacob Guggenheim 2019
+# Jerry Ng 2019
 
 import rospy
 import numpy as np
@@ -36,7 +37,7 @@ mask = None
 color = None
 
 def main():
-    rospy.Subscriber('/usb_cam/image_raw', Image, opFlowCallback)
+    rospy.Subscriber('/camera/rgb/image_raw', Image, opFlowCallback)
     print("Subscribing")
     rospy.spin()
 

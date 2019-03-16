@@ -1,14 +1,15 @@
 #!/usr/bin/python
 
-# 2.12 Lab 4 object detection: a node for de-noising
-# Luke Roberto Oct 2017
+# 2.12 Lab 7 object detection: a node for color thresholding
+# Jacob Guggenheim 2019
+# Jerry Ng 2019
 
 import rospy
 import numpy as np
 import cv2  # OpenCV module
 from matplotlib import pyplot as plt
 import time
-
+from Tkinter import *
 from sensor_msgs.msg import Image, CameraInfo
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point, Pose, Twist, Vector3, Quaternion
@@ -22,55 +23,64 @@ rospy.init_node('colorThresh', anonymous=True)
 
 # Bridge to convert ROS Image type to OpenCV Image type
 cv_bridge = CvBridge()
+tk = Tk()
+l_b = Scale(tk, from_ = 0, to = 255, label = 'Blue, lower', orient = HORIZONTAL)
+l_b.pack()
+u_b = Scale(tk, from_ = 0, to = 255, label = 'Blue, upper', orient = HORIZONTAL)
+u_b.pack()
+u_b.set(255)
+l_g = Scale(tk, from_ = 0, to = 255, label = 'Green, lower', orient = HORIZONTAL)
+l_g.pack()
+u_g = Scale(tk, from_ = 0, to = 255, label = 'Green, upper', orient = HORIZONTAL)
+u_g.pack()
+u_g.set(255)
+l_r = Scale(tk, from_ = 0, to = 255, label = 'Red, lower', orient = HORIZONTAL)
+l_r.pack()
+u_r = Scale(tk, from_ = 0, to = 255, label = 'Red, upper', orient = HORIZONTAL)
+u_r.pack()
+u_r.set(255)
 
-def nothing(x):
-    pass
+l_h = Scale(tk, from_ = 0, to = 255, label = 'Hue, lower', orient = HORIZONTAL)
+l_h.pack()
+u_h = Scale(tk, from_ = 0, to = 255, label = 'Hue, upper', orient = HORIZONTAL)
+u_h.pack()
+u_h.set(255)
+l_s = Scale(tk, from_ = 0, to = 255, label = 'Saturation, lower', orient = HORIZONTAL)
+l_s.pack()
+u_s = Scale(tk, from_ = 0, to = 255, label = 'Saturation, upper', orient = HORIZONTAL)
+u_s.pack()
+u_s.set(255)
+l_v = Scale(tk, from_ = 0, to = 255, label = 'Value, lower', orient = HORIZONTAL)
+l_v.pack()
+u_v = Scale(tk, from_ = 0, to = 255, label = 'Value, upper', orient = HORIZONTAL)
+u_v.pack()
+u_v.set(255)
+
 
 def main():
-    # create RGB tracker bar
-    cv2.namedWindow('RGB_Thresholding')
-    cv2.createTrackbar('L - b', 'RGB_Thresholding', 0, 255, nothing)
-    cv2.createTrackbar('U - b', 'RGB_Thresholding', 255, 255, nothing)
-    cv2.createTrackbar('L - g', 'RGB_Thresholding', 0, 255, nothing)
-    cv2.createTrackbar('U - g', 'RGB_Thresholding', 255, 255, nothing)
-    cv2.createTrackbar('L - r', 'RGB_Thresholding', 0, 255, nothing)
-    cv2.createTrackbar('U - r', 'RGB_Thresholding', 255, 255, nothing)
-
-    # create HSV tracker bar
-    cv2.namedWindow('HSV_Thresholding')
-    cv2.createTrackbar('L - h', 'HSV_Thresholding', 0, 255, nothing)
-    cv2.createTrackbar('U - h', 'HSV_Thresholding', 255, 255, nothing)
-    cv2.createTrackbar('L - s', 'HSV_Thresholding', 0, 255, nothing)
-    cv2.createTrackbar('U - s', 'HSV_Thresholding', 255, 255, nothing)
-    cv2.createTrackbar('L - v', 'HSV_Thresholding', 0, 255, nothing)
-    cv2.createTrackbar('U - v', 'HSV_Thresholding', 255, 255, nothing)
-
-    rospy.Subscriber('/usb_cam/image_raw', Image, colorThreshCallback)
+    rospy.Subscriber('/camera/rgb/image_raw', Image, colorThreshCallback)
     print("Subscribing")
-    rospy.spin()
+    mainloop()
 
 
 def colorThreshCallback(msg):
     # convert ROS image to opencv format
+
+    print('here')
+    i = 0
     try:
         cv_image = cv_bridge.imgmsg_to_cv2(msg, "bgr8")
     except CvBridgeError as e:
         print(e)
-
+    
     # visualize it in a cv window
     cv2.imshow("Original_Image", cv_image)
     cv2.waitKey(3)
-
     ################ RGB THRESHOLDING ####################
-    # get threshold values
-    l_b = cv2.getTrackbarPos('L - b', 'RGB_Thresholding')
-    u_b = cv2.getTrackbarPos('U - b', 'RGB_Thresholding')
-    l_g = cv2.getTrackbarPos('L - g', 'RGB_Thresholding')
-    u_g = cv2.getTrackbarPos('U - g', 'RGB_Thresholding')
-    l_r = cv2.getTrackbarPos('L - r', 'RGB_Thresholding')
-    u_r = cv2.getTrackbarPos('U - r', 'RGB_Thresholding')
-    lower_bound_RGB = np.array([l_b, l_g, l_r])
-    upper_bound_RGB = np.array([u_b, u_g, u_r])
+    #get threshold values
+    
+    lower_bound_RGB = np.array([l_b.get(), l_g.get(), l_r.get()])
+    upper_bound_RGB = np.array([u_b.get(), u_g.get(), u_r.get()])
 
     # threshold
     mask_RGB = cv2.inRange(cv_image, lower_bound_RGB, upper_bound_RGB)
@@ -86,14 +96,8 @@ def colorThreshCallback(msg):
     hsv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2HSV)
 
     # get threshold values
-    l_h = cv2.getTrackbarPos('L - h', 'HSV_Thresholding')
-    u_h = cv2.getTrackbarPos('U - h', 'HSV_Thresholding')
-    l_s = cv2.getTrackbarPos('L - s', 'HSV_Thresholding')
-    u_s = cv2.getTrackbarPos('U - s', 'HSV_Thresholding')
-    l_v = cv2.getTrackbarPos('L - v', 'HSV_Thresholding')
-    u_v = cv2.getTrackbarPos('U - v', 'HSV_Thresholding')
-    lower_bound_HSV = np.array([l_h, l_s, l_v])
-    upper_bound_HSV = np.array([u_h, u_s, u_v])
+    lower_bound_HSV = np.array([l_h.get(), l_s.get(), l_v.get()])
+    upper_bound_HSV = np.array([u_h.get(), u_s.get(), u_v.get()])
 
     # threshold
     mask_HSV = cv2.inRange(hsv_image, lower_bound_HSV, upper_bound_HSV)
